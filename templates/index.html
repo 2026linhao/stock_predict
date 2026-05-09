@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>便利店智能补货看板</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f7fa; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; text-align: center; margin-bottom: 20px; }
+        label { font-weight: bold; display: block; margin-top: 15px; }
+        input, select { width: 100%; padding: 12px; margin-top: 8px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
+        button { background: #3498db; color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-size: 18px; cursor: pointer; margin-top: 25px; }
+        button:hover { background: #2980b9; }
+        .result { margin-top: 25px; background: #e8f4f8; padding: 15px; border-radius: 8px; }
+        .item { border-bottom: 1px solid #bdc3c7; padding: 8px 0; }
+        .item:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📦 明日进货建议</h2>
+        <label>选择预测日期：</label>
+        <input type="date" id="predict_date" value="{{ tomorrow }}">
+
+        <label>当天有促销活动吗？</label>
+        <select id="promo">
+            <option value="0">无促销</option>
+            <option value="1">有促销</option>
+        </select>
+
+        <button onclick="getPrediction()">🔍 生成进货单</button>
+
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        async function getPrediction() {
+            const date = document.getElementById("predict_date").value;
+            const promo = document.getElementById("promo").value;
+
+            if (!date) {
+                alert("请选择日期");
+                return;
+            }
+
+            const response = await fetch("/predict", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({date: date, promo: promo})
+            });
+
+            const data = await response.json();
+            let html = `<h3>📋 ${date} 进货单</h3>`;
+            data.forEach(item => {
+                html += `<div class="item"><b>${item.商品}</b> —— ${item.建议进货量} 个 <small>(${item.星期} / ${item.是否促销})</small></div>`;
+            });
+            document.getElementById("result").innerHTML = html;
+            document.getElementById("result").style.display = "block";
+        }
+    </script>
+</body>
+</html>
